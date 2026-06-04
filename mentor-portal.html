@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OHPA Mentor Development</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #F5F1EA;
+      --ink: #1C1917;
+      --ink-mid: #44403C;
+      --ink-light: #78716C;
+      --ink-faint: #A8A29E;
+      --teal: #1B4FD8;
+      --teal-mid: #2563EB;
+      --teal-light: #EFF6FF;
+      --teal-border: #BFDBFE;
+      --gold: #B45309;
+      --gold-light: #FEF3C7;
+      --gold-border: #D97706;
+      --border: #E2DDD8;
+      --border-mid: #D0C9C0;
+      --danger: #B91C1C;
+      --danger-light: #FEE2E2;
+      --success: #166534;
+      --success-light: #DCFCE7;
+      --white: #FDFCFA;
+      --r: 10px;
+      --r-lg: 16px;
+    }
+
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .site-header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(245,241,234,0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 2rem;
+      height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+    }
+
+    .logo-badge {
+      background: var(--teal);
+      color: #fff;
+      font-size: 0.6rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 5px;
+    }
+
+    .logo-name {
+      font-family: 'Lora', serif;
+      font-size: 1rem;
+      color: var(--ink);
+    }
+
+    .header-action {
+      font-size: 0.82rem;
+      color: var(--ink-light);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .header-action:hover { color: var(--teal); }
+
+    /* ── Pages ── */
+    .page { display: none; min-height: calc(100vh - 56px); }
+    .page.on { display: block; }
+
+    .page-inner {
+      max-width: 580px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 4rem;
+    }
+
+    /* ── Landing ── */
+    .landing-hero {
+      text-align: center;
+      padding: 4rem 1.5rem 3rem;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .landing-eyebrow {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 1rem;
+    }
+
+    .landing-title {
+      font-family: 'Lora', serif;
+      font-size: 2.8rem;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+      color: var(--ink);
+    }
+
+    .landing-title em { font-style: italic; color: var(--teal); }
+
+    .landing-sub {
+      font-size: 0.95rem;
+      color: var(--ink-mid);
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .choice-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 1.5rem 1.25rem;
+      cursor: pointer;
+      text-align: left;
+      transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+      position: relative;
+    }
+
+    .choice-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(15,107,92,0.1);
+      border-color: var(--teal-border);
+    }
+
+    .choice-card.primary {
+      background: var(--teal);
+      border-color: var(--teal);
+    }
+
+    .choice-card.primary:hover {
+      background: var(--teal-mid);
+      box-shadow: 0 8px 24px rgba(15,107,92,0.25);
+    }
+
+    .choice-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.75rem;
+      display: block;
+    }
+
+    .choice-card h3 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 0.4rem;
+      color: var(--ink);
+    }
+
+    .choice-card.primary h3 { color: #fff; }
+
+    .choice-card p {
+      font-size: 0.78rem;
+      color: var(--ink-light);
+      line-height: 1.5;
+    }
+
+    .choice-card.primary p { color: rgba(255,255,255,0.75); }
+
+    /* ── Form sections ── */
+    .page-eyebrow {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 0.5rem;
+    }
+
+    .page-title {
+      font-family: 'Lora', serif;
+      font-size: 1.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .page-sub {
+      font-size: 0.88rem;
+      color: var(--ink-mid);
+      line-height: 1.65;
+      margin-bottom: 2rem;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.82rem;
+      color: var(--ink-faint);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      margin-bottom: 1.75rem;
+      transition: color 0.15s;
+    }
+
+    .back-btn:hover { color: var(--teal); }
+
+    /* ── Cards ── */
+    .section-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 1.4rem;
+      margin-bottom: 1rem;
+    }
+
+    .section-label {
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 1.1rem;
+    }
+
+    /* ── Fields ── */
+    .field { margin-bottom: 1rem; }
+    .field:last-child { margin-bottom: 0; }
+
+    .field label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--ink-mid);
+      margin-bottom: 5px;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      padding: 9px 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      color: var(--ink);
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--teal-border);
+      box-shadow: 0 0 0 3px rgba(15,107,92,0.08);
+    }
+
+    .field input.err,
+    .field select.err {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgba(185,28,28,0.08);
+    }
+
+    .field select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23A8A29E' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+      cursor: pointer;
+    }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .req { color: var(--danger); }
+
+    /* ── Checkboxes ── */
+    .cb-list { display: flex; flex-direction: column; gap: 5px; }
+
+    .cb-row {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.88rem;
+      color: var(--ink);
+      cursor: pointer;
+      padding: 8px 10px;
+      border-radius: var(--r);
+      transition: background 0.12s;
+    }
+
+    .cb-row:hover { background: var(--teal-light); }
+
+    .cb-row input[type="checkbox"] {
+      width: 15px; height: 15px;
+      cursor: pointer;
+      accent-color: var(--teal);
+      flex-shrink: 0;
+    }
+
+    /* ── Upload ── */
+    .suitable-note {
+      background: var(--teal-light);
+      border: 1px solid var(--teal-border);
+      border-radius: var(--r);
+      padding: 11px 13px;
+      font-size: 0.82rem;
+      color: var(--teal);
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    .suitable-note a {
+      color: var(--teal);
+      font-weight: 500;
+      text-underline-offset: 2px;
+    }
+
+    .upload-zone {
+      border: 1.5px dashed var(--border-mid);
+      border-radius: var(--r);
+      padding: 1.4rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.drag-over {
+      border-color: var(--teal-border);
+      background: var(--teal-light);
+    }
+
+    .upload-zone p { font-size: 0.82rem; color: var(--ink-mid); margin-bottom: 3px; }
+    .upload-zone span { font-size: 0.75rem; color: var(--ink-faint); }
+
+    .upload-status {
+      margin-top: 8px;
+      font-size: 0.8rem;
+      padding: 7px 10px;
+      border-radius: var(--r);
+      display: none;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .upload-status.on { display: flex; }
+    .upload-status.ok { background: var(--success-light); color: var(--success); }
+    .upload-status.bad { background: var(--danger-light); color: var(--danger); }
+    .upload-status.loading { background: var(--cream); color: var(--ink-mid); }
+
+    /* ── Buttons ── */
+    .btn-primary {
+      width: 100%;
+      padding: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: #fff;
+      background: var(--teal);
+      border: none;
+      border-radius: var(--r);
+      cursor: pointer;
+      transition: background 0.15s, transform 0.12s;
+      margin-top: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-primary:hover { background: var(--teal-mid); }
+    .btn-primary:active { transform: scale(0.99); }
+    .btn-primary:disabled { background: var(--border); color: var(--ink-faint); cursor: not-allowed; }
+
+    .btn-secondary {
+      width: 100%;
+      padding: 11px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--teal);
+      background: var(--teal-light);
+      border: 1px solid var(--teal-border);
+      border-radius: var(--r);
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-top: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-secondary:hover { background: #d0eae5; }
+
+    /* ── Login result ── */
+    .login-msg {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: var(--r);
+      font-size: 0.82rem;
+      display: none;
+    }
+
+    .login-msg.on { display: block; }
+    .login-msg.ok { background: var(--success-light); color: var(--success); }
+    .login-msg.bad { background: var(--danger-light); color: var(--danger); }
+
+    /* ── Profile view ── */
+    .profile-banner {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 1.4rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .avatar {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: var(--teal-light);
+      border: 2px solid var(--teal-border);
+      color: var(--teal);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Lora', serif;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .profile-name { font-family: 'Lora', serif; font-size: 1.3rem; margin-bottom: 2px; }
+    .profile-meta { font-size: 0.8rem; color: var(--ink-light); }
+
+    .prog-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+
+    .prog-tag {
+      font-size: 0.75rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: var(--teal-light);
+      color: var(--teal);
+      border: 1px solid var(--teal-border);
+    }
+
+    .assess-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .assess-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .assess-label { font-size: 0.88rem; font-weight: 500; margin-bottom: 2px; }
+    .assess-date { font-size: 0.75rem; color: var(--ink-faint); }
+
+    .pill {
+      font-size: 0.72rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+    }
+
+    .pill-start { background: var(--teal-light); color: var(--teal); border: 1px solid var(--teal-border); }
+    .pill-end { background: var(--gold-light); color: var(--gold); border: 1px solid var(--gold-border); }
+
+    /* ── Report ── */
+    .threshold-notice {
+      background: var(--gold-light);
+      border: 1px solid var(--gold-border);
+      border-radius: var(--r);
+      padding: 12px 14px;
+      font-size: 0.82rem;
+      color: var(--gold);
+      line-height: 1.6;
+    }
+
+    .threshold-notice strong { font-weight: 500; }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .stat-box {
+      background: var(--cream);
+      border-radius: var(--r);
+      padding: 10px 12px;
+      text-align: center;
+    }
+
+    .stat-num { font-family: 'Lora', serif; font-size: 1.6rem; color: var(--ink); }
+    .stat-lbl { font-size: 0.72rem; color: var(--ink-faint); margin-top: 2px; }
+
+    .report-legend {
+      display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: .75rem;
+    }
+
+    .rli { display: flex; align-items: center; gap: 5px; font-size: 0.75rem; color: var(--ink-mid); }
+    .rld { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .rls { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+    .rlm { width: 18px; height: 2.5px; border-radius: 2px; flex-shrink: 0; }
+
+    .chart-section-label {
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin: 1.5rem 0 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .scale-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.68rem;
+      color: var(--ink-faint);
+      margin-top: 6px;
+      padding: 0 2px;
+    }
+
+    .chart-wrap { position: relative; width: 100%; }
+
+    .free-block { margin-bottom: 1.25rem; }
+    .free-block:last-child { margin-bottom: 0; }
+
+    .free-heading {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--ink-mid);
+      margin-bottom: 0.5rem;
+    }
+
+    .free-item {
+      background: var(--cream);
+      border-radius: var(--r);
+      padding: 10px 12px;
+      font-size: 0.85rem;
+      color: var(--ink-mid);
+      line-height: 1.65;
+      margin-bottom: 6px;
+    }
+
+    .free-item:last-child { margin-bottom: 0; }
+
+    .ai-tag {
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: var(--teal-light);
+      color: var(--teal);
+      padding: 2px 7px;
+      border-radius: 4px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    /* ── Success ── */
+    .success-wrap {
+      text-align: center;
+      padding: 4rem 1rem;
+    }
+
+    .success-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .success-wrap h2 {
+      font-family: 'Lora', serif;
+      font-size: 1.6rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .success-wrap p {
+      font-size: 0.88rem;
+      color: var(--ink-mid);
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 1.5rem; left: 50%;
+      transform: translateX(-50%) translateY(12px);
+      background: var(--ink);
+      color: #fff;
+      font-size: 0.82rem;
+      padding: 9px 16px;
+      border-radius: 8px;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-up { animation: fadeUp 0.35s ease both; }
+    .d1 { animation-delay: 0.05s; }
+    .d2 { animation-delay: 0.1s; }
+    .d3 { animation-delay: 0.15s; }
+
+    @media (max-width: 500px) {
+      .landing-title { font-size: 2rem; }
+      .choice-grid, .two-col { grid-template-columns: 1fr; }
+      .site-header { padding: 0 1rem; }
+      .page-inner { padding: 2rem 1rem 3rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo">
+    <span class="logo-badge">OHPA</span>
+    <span class="logo-name">Mentor Development</span>
+  </div>
+  <button class="header-action" id="headerAction" style="display:none" onclick="signOut()">Sign out</button>
+</header>
+
+<!-- ══════════════════ LANDING ══════════════════ -->
+<div class="page on" id="pg-land">
+  <div class="landing-hero">
+    <p class="landing-eyebrow fade-up">Office of Health Professions Advising</p>
+    <h1 class="landing-title fade-up d1">Your mentorship <em>journey</em> starts here.</h1>
+    <p class="landing-sub fade-up d2">This portal tracks your growth as a peer mentor throughout the semester — from your first self-assessment to your final reflection.</p>
+    <div class="choice-grid fade-up d3">
+      <div class="choice-card primary" onclick="showPage('pg-reg')">
+        <span class="choice-icon">✦</span>
+        <h3>Create a mentor profile</h3>
+        <p>First time here? Complete your intake and start your growth journey.</p>
+      </div>
+      <div class="choice-card" onclick="showPage('pg-login')">
+        <span class="choice-icon">↩</span>
+        <h3>Returning mentor</h3>
+        <p>Log in with your university email to view your profile and feedback.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ REGISTER ══════════════════ -->
+<div class="page" id="pg-reg">
+  <div class="page-inner">
+    <button class="back-btn" onclick="showPage('pg-land')">← Back</button>
+    <p class="page-eyebrow">Office of Health Professions Advising · Mentor Development</p>
+    <h1 class="page-title">Create your profile</h1>
+    <p class="page-sub">Fill in your information below. Your profile will be saved when you submit, and this self-assessment will be timestamped as your start-of-semester baseline.</p>
+
+    <div class="section-card">
+      <div class="section-label">Basic information</div>
+      <div class="two-col">
+        <div class="field"><label>First name <span class="req">*</span></label><input type="text" id="r-fn" placeholder="First name"/></div>
+        <div class="field"><label>Last name <span class="req">*</span></label><input type="text" id="r-ln" placeholder="Last name"/></div>
+      </div>
+      <div class="field"><label>University email <span class="req">*</span></label><input type="email" id="r-em" placeholder="netid@university.edu"/></div>
+      <div class="two-col">
+        <div class="field"><label>Major <span class="req">*</span></label><input type="text" id="r-maj" placeholder="e.g. Biology"/></div>
+        <div class="field"><label>College entry year <span class="req">*</span></label>
+          <select id="r-ey"><option value="">Select year</option>
+            <option>2018</option><option>2019</option><option>2020</option><option>2021</option><option>2022</option><option>2023</option><option>2024</option><option>2025</option><option>2026</option><option>2027</option><option>2028</option><option>2029</option><option>2030</option><option>2031</option><option>2032</option><option>2033</option><option>2034</option><option>2035</option><option>2036</option><option>2037</option><option>2038</option><option>2039</option><option>2040</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Expected graduation <span class="req">*</span></label>
+        <div class="two-col" style="margin:0">
+          <select id="r-gs"><option value="">Semester</option><option>Spring</option><option>Summer</option><option>Fall</option></select>
+          <select id="r-gy"><option value="">Year</option>
+            <option>2025</option><option>2026</option><option>2027</option><option>2028</option><option>2029</option><option>2030</option><option>2031</option><option>2032</option><option>2033</option><option>2034</option><option>2035</option><option>2036</option><option>2037</option><option>2038</option><option>2039</option><option>2040</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-label">OHPA programs</div>
+      <p style="font-size:0.8rem;color:var(--ink-mid);margin:0 0 1rem;line-height:1.6">Select all programs you are currently involved with.</p>
+      <div class="cb-list">
+        <label class="cb-row"><input type="checkbox" value="Ambassadors"/> Ambassadors</label>
+        <label class="cb-row"><input type="checkbox" value="Chemistry Lifeline"/> Chemistry Lifeline</label>
+        <label class="cb-row"><input type="checkbox" value="Excel Shadowing"/> Excel Shadowing</label>
+        <label class="cb-row"><input type="checkbox" value="HEALs"/> HEALs</label>
+        <label class="cb-row"><input type="checkbox" value="PALs"/> PALs</label>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-label">Suitable assessment</div>
+      <div class="suitable-note">Complete the Suitable career readiness assessment, then upload your results PDF below. <a href="#" onclick="return false">Open Suitable ↗</a> — link coming soon.</div>
+      <div class="field">
+        <label>Upload your Suitable results PDF <span class="req">*</span></label>
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('pdfInput').click()">
+          <input type="file" id="pdfInput" accept=".pdf" style="display:none" onchange="handlePdf(this.files[0])"/>
+          <p>Click to upload, or drag and drop</p>
+          <span>Suitable results PDF · max 10 MB</span>
+        </div>
+        <div class="upload-status" id="uploadStatus"></div>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="regBtn" onclick="doRegister()">Create my profile →</button>
+  </div>
+</div>
+
+<!-- ══════════════════ LOGIN ══════════════════ -->
+<div class="page" id="pg-login">
+  <div class="page-inner">
+    <button class="back-btn" onclick="showPage('pg-land')">← Back</button>
+    <p class="page-eyebrow">Office of Health Professions Advising · Mentor Development</p>
+    <h1 class="page-title">Welcome back</h1>
+    <p class="page-sub">Enter your university email to access your profile and peer feedback report.</p>
+    <div class="section-card" style="max-width:400px">
+      <div class="field"><label>University email</label><input type="email" id="l-em" placeholder="netid@university.edu" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+      <button class="btn-primary" onclick="doLogin()">View my profile →</button>
+      <div class="login-msg" id="loginMsg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════ PROFILE ══════════════════ -->
+<div class="page" id="pg-prof">
+  <div class="page-inner">
+    <p class="page-eyebrow">Office of Health Professions Advising · Mentor Development</p>
+
+    <div class="profile-banner">
+      <div class="avatar" id="profAv">?</div>
+      <div>
+        <p class="profile-name" id="profName">—</p>
+        <p class="profile-meta" id="profMeta">—</p>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-label">OHPA programs</div>
+      <div class="prog-tags" id="profProgs"></div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-label">Self-assessments</div>
+      <div id="assessList"><p style="font-size:0.82rem;color:var(--ink-faint)">No assessments on record yet.</p></div>
+    </div>
+
+    <!-- Feedback Report -->
+    <div class="section-card" id="reportSection">
+      <div class="section-label">Peer feedback report</div>
+      <div id="reportInner"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════ SUCCESS ══════════════════ -->
+<div class="page" id="pg-success">
+  <div class="page-inner">
+    <div class="success-wrap">
+      <div class="success-icon">✓</div>
+      <h2>Profile created!</h2>
+      <p>Your mentor profile and start-of-semester self-assessment have been saved. You can log back in at any time with your email.</p>
+      <button class="btn-primary" style="max-width:280px;margin:0 auto" onclick="showPage('pg-land')">Back to home</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ─── CONFIG — Replace with your Supabase project values ───────────────
+  // *** PASTE YOUR VALUES HERE ***
+  const SUPABASE_URL      = sb_publishable_8JLHOSctOfBNfzgJ-W9p-A_2MdKdfOL;
+  const SUPABASE_ANON_KEY = sb_secret_u954bDrt9Rs4wf6JR93Vcg_1bkuBmeE;
+  // *** END PASTE ***
+  // ───────────────────────────────────────────────────────────────────────
+
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // ── routing ──
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+    document.getElementById(id).classList.add('on');
+    document.getElementById('headerAction').style.display = (id === 'pg-prof') ? 'block' : 'none';
+    window.scrollTo(0, 0);
+  }
+
+  function signOut() { showPage('pg-land'); }
+
+  // ── toast ──
+  function toast(msg, dur = 3200) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), dur);
+  }
+
+  // ── PDF upload ──
+  const uz = document.getElementById('uploadZone');
+  uz.addEventListener('dragover', e => { e.preventDefault(); uz.classList.add('drag-over'); });
+  uz.addEventListener('dragleave', () => uz.classList.remove('drag-over'));
+  uz.addEventListener('drop', e => { e.preventDefault(); uz.classList.remove('drag-over'); if (e.dataTransfer.files[0]) handlePdf(e.dataTransfer.files[0]); });
+
+  window._pdfFile = null;
+
+  function handlePdf(file) {
+    const s = document.getElementById('uploadStatus');
+    s.className = 'upload-status';
+    if (!file || file.type !== 'application/pdf') { s.className = 'upload-status bad on'; s.textContent = '✕  Please upload a PDF file.'; return; }
+    if (file.size > 10 * 1024 * 1024) { s.className = 'upload-status bad on'; s.textContent = '✕  File exceeds 10 MB.'; return; }
+    window._pdfFile = file;
+    s.className = 'upload-status ok on';
+    s.textContent = '✓  ' + file.name + ' uploaded.';
+  }
+
+  // ── register ──
+  async function doRegister() {
+    const fids = ['r-fn','r-ln','r-em','r-maj','r-ey','r-gs','r-gy'];
+    let ok = true;
+    fids.forEach(id => { const el = document.getElementById(id); el.classList.remove('err'); if (!el.value.trim()) { el.classList.add('err'); ok = false; } });
+    if (!window._pdfFile) { toast('Please upload your Suitable PDF.'); ok = false; }
+    if (!ok) return;
+
+    const btn = document.getElementById('regBtn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+
+    try {
+      const email = document.getElementById('r-em').value.trim().toLowerCase();
+      const { data: existing } = await sb.from('mentors').select('id').eq('email', email).single();
+      if (existing) { toast('An account with this email already exists. Please log in.'); btn.disabled = false; btn.textContent = 'Create my profile →'; return; }
+
+      let pdfPath = null;
+      if (window._pdfFile) {
+        const { data: up } = await sb.storage.from('suitable-pdfs').upload(`${email}-${Date.now()}.pdf`, window._pdfFile, { contentType: 'application/pdf' });
+        if (up) pdfPath = up.path;
+      }
+
+      const { data: mentor, error: mErr } = await sb.from('mentors').insert({
+        first_name: document.getElementById('r-fn').value.trim(),
+        last_name:  document.getElementById('r-ln').value.trim(),
+        email:      email,
+        major:      document.getElementById('r-maj').value.trim(),
+        entry_year: parseInt(document.getElementById('r-ey').value),
+        grad_term:  document.getElementById('r-gs').value + ' ' + document.getElementById('r-gy').value,
+        programs:   [...document.querySelectorAll('#pg-reg .cb-list input:checked')].map(c => c.value),
+      }).select().single();
+
+      if (mErr) throw mErr;
+
+      await sb.from('self_assessments').insert({
+        mentor_id: mentor.id,
+        assessment_type: 'start',
+        completed_at: new Date().toISOString(),
+        suitable_pdf: pdfPath,
+      });
+
+      showPage('pg-success');
+    } catch (e) {
+      console.error(e);
+      toast('Something went wrong. Please try again.');
+      btn.disabled = false; btn.textContent = 'Create my profile →';
+    }
+  }
+
+  // ── login ──
+  async function doLogin() {
+    const email = document.getElementById('l-em').value.trim().toLowerCase();
+    const msg = document.getElementById('loginMsg');
+    msg.className = 'login-msg';
+    if (!email) { document.getElementById('l-em').classList.add('err'); return; }
+
+    try {
+      const { data: mentor, error } = await sb.from('mentors').select('*').eq('email', email).single();
+      if (error || !mentor) {
+        msg.className = 'login-msg bad on';
+        msg.textContent = 'No profile found for that email. Check your spelling or create a new profile.';
+        return;
+      }
+      await loadProfile(mentor);
+    } catch (e) {
+      msg.className = 'login-msg bad on';
+      msg.textContent = 'Something went wrong. Please try again.';
+    }
+  }
+
+  // ── load profile ──
+  async function loadProfile(mentor) {
+    document.getElementById('profAv').textContent = (mentor.first_name[0] + mentor.last_name[0]).toUpperCase();
+    document.getElementById('profName').textContent = `${mentor.first_name} ${mentor.last_name}`;
+    document.getElementById('profMeta').textContent = `${mentor.major} · Entered ${mentor.entry_year} · Graduating ${mentor.grad_term}`;
+
+    const progs = mentor.programs || [];
+    document.getElementById('profProgs').innerHTML = progs.length
+      ? progs.map(p => `<span class="prog-tag">${p}</span>`).join('')
+      : '<span style="font-size:0.8rem;color:var(--ink-faint)">None listed.</span>';
+
+    const { data: assessments } = await sb.from('self_assessments').select('*').eq('mentor_id', mentor.id).order('completed_at', { ascending: false });
+    const list = document.getElementById('assessList');
+    list.innerHTML = assessments && assessments.length
+      ? assessments.map(a => {
+          const d = new Date(a.completed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          const isStart = a.assessment_type === 'start';
+          return `<div class="assess-row"><div><p class="assess-label">${isStart ? 'Start-of-semester baseline' : 'End-of-semester reflection'}</p><p class="assess-date">Completed ${d}</p></div><span class="pill ${isStart ? 'pill-start' : 'pill-end'}">${isStart ? 'Baseline' : 'Final'}</span></div>`;
+        }).join('')
+      : '<p style="font-size:0.82rem;color:var(--ink-faint)">No assessments on record yet.</p>';
+
+    await loadReport(mentor.id);
+    showPage('pg-prof');
+  }
+
+  // ── load feedback report ──
+  async function loadReport(mentorId) {
+    const inner = document.getElementById('reportInner');
+
+    const { data: fb } = await sb.from('peer_feedback')
+      .select('*')
+      .eq('mentor_id', mentorId);
+
+    const menteeRows = (fb || []).filter(r => r.respondent_role === 'mentee');
+    const mentorRows = (fb || []).filter(r => r.respondent_role === 'mentor');
+
+    inner.innerHTML = `
+      <div class="stat-grid">
+        <div class="stat-box"><div class="stat-num">${menteeRows.length}</div><div class="stat-lbl">Mentee responses</div></div>
+        <div class="stat-box"><div class="stat-num">${mentorRows.length}</div><div class="stat-lbl">Mentor responses</div></div>
+        <div class="stat-box"><div class="stat-num">${(fb||[]).length}</div><div class="stat-lbl">Total responses</div></div>
+      </div>`;
+
+    if (menteeRows.length < 5 || mentorRows.length < 3) {
+      inner.innerHTML += `<div class="threshold-notice"><strong>Not enough responses yet.</strong> Results appear once at least 5 mentees and 3 mentors have submitted feedback. This protects respondent anonymity and ensures meaningful data.</div>`;
+      return;
+    }
+
+    inner.innerHTML += `
+      <div class="report-legend">
+        <div class="rli"><div class="rld" style="background:rgba(55,138,221,0.8);border:1.5px solid #185FA5"></div>Mentee (top of lane)</div>
+        <div class="rli"><div class="rls" style="background:rgba(216,90,48,0.8);border:1.5px solid #993C1D"></div>Mentor (bottom of lane)</div>
+        <div class="rli"><div class="rlm" style="background:#1A1817"></div>Median</div>
+      </div>
+      <p style="font-size:0.72rem;color:var(--ink-faint);margin-bottom:1rem;line-height:1.5">Each dot = one anonymous response. Lanes grow as responses increase. N/A responses excluded from median.</p>
+      <div class="chart-section-label">NACE career readiness competencies</div>
+      <div class="chart-wrap" id="naceWrap"><canvas id="naceCanvas"></canvas></div>
+      <div class="scale-labels"><span>1 · Emerging</span><span>2 · Understanding</span><span>3 · Early App.</span><span>4 · Advanced</span></div>
+      <div class="chart-section-label">Character assessment</div>
+      <div class="chart-wrap" id="charWrap"><canvas id="charCanvas"></canvas></div>
+      <div class="scale-labels"><span>1 · Not at all</span><span>2 · Rarely</span><span>3 · Sometimes</span><span>4 · Often</span><span>5 · Consistently</span></div>`;
+
+    const NACE_KEYS = ['nace_career','nace_communication','nace_critical_thinking','nace_equity','nace_leadership','nace_professionalism','nace_teamwork','nace_technology'];
+    const NACE_LABELS = ['Career & Self-Dev.','Communication','Critical Thinking','Equity & Inclusion','Leadership','Professionalism','Teamwork','Technology'];
+    const CHAR_KEYS = ['char_knowledge','char_clarity','char_truth','char_error','char_world','char_goals'];
+    const CHAR_LABELS = ['Increased your knowledge','Helped you think clearly','Helped pursue truth','Recognized your errors','Equipped to change world','Helped pursue goals'];
+
+    function extractVals(rows, key) {
+      return rows.map(r => r[key]).filter(v => v !== null && v !== 'na' && v !== undefined).map(Number);
+    }
+
+    function buildSwimChart(canvasId, wrapId, questions, labels, allRows, menteeRows, mentorRows, xMax) {
+      const n = Math.max(menteeRows.length, mentorRows.length);
+      const lh = Math.max(52, 52 + (n - 3) * 10);
+      const totalH = questions.length * lh + 60;
+      document.getElementById(wrapId).style.height = totalH + 'px';
+
+      const datasets = [];
+      const BLUE_F = 'rgba(55,138,221,0.8)', BLUE_B = '#185FA5';
+      const ORA_F  = 'rgba(216,90,48,0.8)',  ORA_B  = '#993C1D';
+      const MED_C  = '#1A1817';
+
+      questions.forEach((key, qi) => {
+        const menteeVals = extractVals(menteeRows, key);
+        const mentorVals = extractVals(mentorRows, key);
+        const allVals = [...menteeVals, ...mentorVals];
+        const laneY = qi;
+
+        const menteeOff = 0.22, mentorOff = -0.22;
+        const mCount = {}; const mPos = {};
+        menteeVals.forEach(v => { mCount[v] = (mCount[v]||0)+1; });
+        menteeVals.forEach(v => {
+          mPos[v] = mPos[v]||0;
+          const i = mPos[v]++; const t = mCount[v];
+          datasets.push({ type:'scatter', label:'Mentee', data:[{x: v+(t>1?(i-(t-1)/2)*0.1:0), y: laneY+menteeOff }], backgroundColor:BLUE_F, borderColor:BLUE_B, borderWidth:1.5, pointRadius:7, pointStyle:'circle' });
+        });
+
+        const rCount = {}; const rPos = {};
+        mentorVals.forEach(v => { rCount[v] = (rCount[v]||0)+1; });
+        mentorVals.forEach(v => {
+          rPos[v] = rPos[v]||0;
+          const i = rPos[v]++; const t = rCount[v];
+          datasets.push({ type:'scatter', label:'Mentor', data:[{x: v+(t>1?(i-(t-1)/2)*0.1:0), y: laneY+mentorOff }], backgroundColor:ORA_F, borderColor:ORA_B, borderWidth:1.5, pointRadius:7, pointStyle:'rectRounded' });
+        });
+
+        if (allVals.length) {
+          const sorted = [...allVals].sort((a,b)=>a-b);
+          const m2 = Math.floor(sorted.length/2);
+          const med = sorted.length%2 ? sorted[m2] : (sorted[m2-1]+sorted[m2])/2;
+          datasets.push({ type:'line', label:'Median', data:[{x:med,y:laneY-0.4},{x:med,y:laneY+0.4}], borderColor:MED_C, borderWidth:3, pointRadius:0, fill:false, tension:0 });
+        }
+      });
+
+      new Chart(document.getElementById(canvasId), {
+        data: { datasets },
+        options: {
+          responsive:true, maintainAspectRatio:false, animation:false,
+          plugins: { legend:{display:false}, tooltip:{ filter:i=>i.dataset.label!=='Median', callbacks:{label:i=>i.dataset.label+': '+i.parsed.x} } },
+          scales: {
+            x: { type:'linear', min:0.4, max:xMax+0.6, ticks:{stepSize:1,callback:v=>Number.isInteger(v)?v:'',font:{size:10},color:'#A8A29E'}, grid:{color:'rgba(0,0,0,0.05)'}, border:{display:false} },
+            y: { type:'linear', min:-0.6, max:questions.length-0.4, reverse:true, ticks:{stepSize:1,callback:(_,i)=>labels[i]||'',font:{size:11},color:'#44403C',autoSkip:false,padding:4}, grid:{color:'rgba(0,0,0,0.04)'}, border:{display:false} }
+          },
+          layout:{padding:{top:10,bottom:6,left:4,right:12}}
+        }
+      });
+    }
+
+    buildSwimChart('naceCanvas','naceWrap', NACE_KEYS, NACE_LABELS, fb, menteeRows, mentorRows, 4);
+    buildSwimChart('charCanvas','charWrap',  CHAR_KEYS, CHAR_LABELS, fb, menteeRows, mentorRows, 5);
+
+    // Free response summaries
+    const posResponses = (fb||[]).map(r => r.free_positive).filter(Boolean);
+    const growResponses = (fb||[]).map(r => r.free_growth).filter(Boolean);
+
+    if (posResponses.length || growResponses.length) {
+      let summaryHTML = `<div class="chart-section-label" style="margin-top:1.5rem">What peers said <span class="ai-tag">AI summary</span></div>`;
+
+      if (posResponses.length >= 3) {
+        summaryHTML += `<div class="free-block"><p class="free-heading">★ Especially positive</p>`;
+        summaryHTML += await summarizeFreeResponse(posResponses, 'positive');
+        summaryHTML += `</div>`;
+      }
+
+      if (growResponses.length >= 3) {
+        summaryHTML += `<div class="free-block"><p class="free-heading">↑ One area for growth</p>`;
+        summaryHTML += await summarizeFreeResponse(growResponses, 'growth');
+        summaryHTML += `</div>`;
+      }
+
+      summaryHTML += `<p style="font-size:0.72rem;color:var(--ink-faint);margin-top:.75rem;line-height:1.5">Summaries generated from ${(fb||[]).length} responses. Individual submissions are not shown. Phrasing generalized to protect anonymity.</p>`;
+      inner.innerHTML += summaryHTML;
+    }
+  }
+
+  async function summarizeFreeResponse(responses, type) {
+    try {
+      const prompt = type === 'positive'
+        ? `Below are anonymous peer feedback responses about a student mentor's especially positive qualities. Synthesize these into 2 concise, specific summary sentences that capture the main themes. Do NOT quote directly — paraphrase and generalize to protect anonymity. Do not include any preamble.\n\n${responses.join('\n')}`
+        : `Below are anonymous peer feedback responses suggesting one area for growth for a student mentor. Synthesize these into 2 concise, specific summary sentences that capture the main themes. Do NOT quote directly — paraphrase and generalize to protect anonymity. Do not include any preamble.\n\n${responses.join('\n')}`;
+
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:300, messages:[{role:'user',content:prompt}] })
+      });
+      const data = await res.json();
+      const text = data.content?.[0]?.text || '';
+      const sentences = text.split(/(?<=[.!?])\s+/).filter(Boolean);
+      return sentences.map(s => `<div class="free-item">${s}</div>`).join('');
+    } catch {
+      return `<div class="free-item" style="color:var(--ink-faint);font-style:italic">Summary unavailable — responses saved for admin review.</div>`;
+    }
+  }
+</script>
+</body>
+</html>
